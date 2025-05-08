@@ -1,0 +1,10 @@
+flask
+face_recognition
+git+https://github.com/ageitgey/face_recognition_models
+numpy
+pillow
+cryptography
+python-dotenv
+sqlalchemy
+mediapipe
+opencv-python

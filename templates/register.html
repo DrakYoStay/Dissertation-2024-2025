@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+</head>
+<body>
+  <h2>Face Registration</h2>
+  <video id="video" width="320" height="240" autoplay></video>
+  <br><br>
+  <p id="status-message">Please blink before the image is captured.</p>
+  <input type="text" id="username" placeholder="Enter your name">
+  <button type="button" onclick="register()">Register</button>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <table border="1">
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Registered At</th>
+      <th>User rights</th>
+      <th>Action</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.id }}</td>
+      <td>{{ user.username }}</td>
+      <td>{{ user.created_at }}</td>
+      <td>{{ user.user_type }}</td>
+      <td>
+        <form method="POST" action="/delete-user/{{ user.id }}" onsubmit="return confirm('Are you sure?')">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <a href="/">Back to Home</a>
+</body>
+</html>

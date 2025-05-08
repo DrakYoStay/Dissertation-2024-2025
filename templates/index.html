@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Auth Home</title>
+</head>
+<body>
+  <h1>Welcome to the Face Auth System</h1>
+
+  {% if user %}
+    <p>You are logged in as <strong>{{ user }}</strong>.</p>
+
+    {% if user_type == 'admin' %}
+      <p><a href="/admin">🔧 Go to Admin Dashboard</a></p>
+    {% endif %}
+
+    <a href="/logout">Logout</a>
+
+  {% else %}
+    <p>You are not logged in.</p>
+    <button onclick="window.location.href='/login-page'">Login</button>
+    <button onclick="window.location.href='/register-page'">Register</button>
+  {% endif %}
+</body>
+</html>
