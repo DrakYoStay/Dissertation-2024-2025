@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, flash
 import face_recognition
 import numpy as np
 import base64
@@ -12,7 +12,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from devTools.database import Base, User
-from devTools.blinkutils import detect_liveness_from_image
+from devTools.blinkutils import detect_liveness_from_frames
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -50,12 +50,10 @@ def register_user():
     if db_session.query(User).filter_by(username=name).first():
         return jsonify({"message": f"Username '{name}' already exists."}), 409
 
-    img_data = data['image'].split(',')[1]
-    img = Image.open(BytesIO(base64.b64decode(img_data)))
-    img_np = np.array(img)
+    frames = data.get('frames')
 
-    if not detect_liveness_from_image(img_np):
-        return jsonify({"message": "Blink not detected — please blink during capture."}), 403
+    if not frames or not detect_liveness_from_frames(frames):
+        return jsonify({"message": "Blink and motion not detected — please blink and move a bit during capture."}), 403
 
     face_encodings = face_recognition.face_encodings(img_np)
     if not face_encodings:
@@ -77,16 +75,17 @@ def login_user():
     if not user:
         return jsonify({"message": "Username not found."}), 404
 
-    img_data = data['image'].split(',')[1]
-    img = Image.open(BytesIO(base64.b64decode(img_data)))
-    img_np = np.array(img)
+    frames = data.get('frames')
 
-    if not detect_liveness_from_image(img_np):
-        return jsonify({"message": "Blink not detected — please blink during capture."}), 403
+    if not frames or not detect_liveness_from_frames(frames):
+        return jsonify({"message": "Blink and motion not detected — please blink and move a bit during capture."}), 403
 
-    face_encodings = face_recognition.face_encodings(img_np)
-    if not face_encodings:
-        return jsonify({"message": "No face detected."}), 400
+    for frame in frames:
+        face_encodings = face_recognition.face_encodings(frame)
+        if not face_encodings:
+            return jsonify({"message": "No face detected."}), 400
+        else:
+            return jsonify({"message": "Log in successfully"})
 
     input_encoding = face_encodings[0]
     match = face_recognition.compare_faces([user.get_encoding()], input_encoding)[0]
@@ -119,6 +118,30 @@ def admin_dashboard():
 
     users = db_session.query(User).all()
     return render_template("admin.html", users=users)
+
+@app.route('/update-role/<int:user_id>', methods=['POST'])
+def update_user_role(user_id):
+    current_username = session.get('user')
+    current_user = db_session.query(User).filter_by(username=current_username).first()
+
+    # Don't allow regular users to access
+    if not current_user or current_user.user_type != 'admin':
+        return "Access denied", 403
+
+    # Optional: prevent demoting yourself
+    if current_user.id == user_id:
+        return "You cannot change your own privileges.", 403
+
+    new_role = request.form.get('user_type')
+    user = db_session.query(User).filter_by(id=user_id).first()
+
+    if user:
+        user.user_type = new_role
+        db_session.commit()
+        flash(f"{user.username} is now a {new_role}.")
+        return redirect(url_for('admin_dashboard'))
+    return "User not found", 404
+
 
 
 if __name__ == '__main__':

@@ -6,6 +6,15 @@
 </head>
 <body>
   <h1>Admin Dashboard</h1>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul style="color: rgb(128, 0, 0); font-weight: bold;">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% endwith %}
   <table border="1">
     <tr>
       <th>ID</th>
@@ -16,16 +25,32 @@
     </tr>
     {% for user in users %}
     <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-      <td>{{ user.created_at }}</td>
-      <td>{{ user.user_type }}</td>
-      <td>
-        <form method="POST" action="/delete-user/{{ user.id }}" onsubmit="return confirm('Are you sure?')">
-          <button type="submit">Delete</button>
-        </form>
-      </td>
-    </tr>
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.created_at }}</td>
+        <td>
+          {% if user.username != session['user'] %}
+            <form method="POST" action="/update-role/{{ user.id }}" onsubmit="return confirm('Change role for {{ user.username }}?')">
+              <select name="user_type" onchange="this.form.submit()">
+                <option value="default_user" {% if user.user_type == 'default_user' %}selected{% endif %}>regular_user</option>
+                <option value="admin" {% if user.user_type == 'admin' %}selected{% endif %}>admin</option>
+              </select>
+            </form>
+          {% else %}
+            {{ user.user_type }} (you)
+          {% endif %}
+        </td>
+        <td>
+          {% if user.username != session['user'] %}
+            <form method="POST" action="/delete-user/{{ user.id }}" onsubmit="return confirm('Delete {{ user.username }}?')">
+              <button type="submit">Delete</button>
+            </form>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
     {% endfor %}
   </table>
   <a href="/">Back to Home</a>
