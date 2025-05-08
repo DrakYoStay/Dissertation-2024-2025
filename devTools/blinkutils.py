@@ -19,7 +19,7 @@ def eye_aspect_ratio(landmarks, eye_indices):
 
 def detect_liveness_from_frames(frames):
     mp_face_mesh = mp.solutions.face_mesh
-    ear_threshold = 0.23
+    ear_threshold = 0.15
     blink_detected = False
     face_positions = []
     ear_series = []
@@ -53,10 +53,11 @@ def detect_liveness_from_frames(frames):
 
     # Blink detection: look for open -> closed -> open pattern
     for i in range(2, len(ear_series) - 2):
+        # The logic is simple, it calculates if ear_serie[i - 1] > 0.15 (eyes open) and ear_serie[i] < 0.15 (eyes closed) and ear_serie[i + 1] > 0.15 (eyes open)
         if (
-            ear_series[i - 2] > ear_threshold and
+            ear_series[i - 1] > ear_threshold and
             ear_series[i] < ear_threshold and
-            ear_series[i + 2] > ear_threshold
+            ear_series[i + 1] > ear_threshold
         ):
             blink_detected = True
             break
@@ -65,7 +66,7 @@ def detect_liveness_from_frames(frames):
     if len(face_positions) >= 2:
         displacement = np.linalg.norm(np.array(face_positions[0]) - np.array(face_positions[-1]))
         moved = displacement > 5  # pixel threshold
-        print(f"EAR: {moved:.3f}")
+        print(f"Moving: {moved:.2f}")
     else:
         moved = False
 
